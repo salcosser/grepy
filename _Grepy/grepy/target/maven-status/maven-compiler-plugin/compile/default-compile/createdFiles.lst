@@ -1,4 +1,4 @@
-com/sgrep/proc/Grepy.class
-com/sgrep/proc/State$Type.class
-com/sgrep/proc/State.class
-com/sgrep/app/App.class
+com\sgrep\proc\State.class
+com\sgrep\app\App.class
+com\sgrep\proc\Grepy.class
+com\sgrep\proc\State$Type.class

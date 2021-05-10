@@ -13,16 +13,18 @@ public class GrepyTest{
     @Test
     public void shouldValidate(){
         Grepy gr = new Grepy();
-        assertEquals(8,gr.t1("hi"));
+
         ArrayList<String> ans = new ArrayList<String>();
 //        ans.add("(a+b)*");
 ////        ans.add("(c+d)");
 ////        ans.add("((a+b)*+(c+d))");
         ans.add("(c+d)");
-        ans.add("(a+b)*");
-        ans.add("x*");
-        ans.add("((c+d)+(a+b)*+x*)");
+        ans.add("(a+b)");
+        ans.add("((c+d)+(a+b))*");
+      ans.add("x*");
+       ans.add("(((c+d)+(a+b))*+x*)");
+//       ans.add("(a)*");
         ArrayList<String> cGroups = new ArrayList<String>();
-        assertEquals(ans, gr.pIn(cGroups,"((c+d)+(a+b)*+x*)"));
+        assertEquals(ans, gr.pIn("(((c+d)+(a+b))*+x*)"));
     }
 }

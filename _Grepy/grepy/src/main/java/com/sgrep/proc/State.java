@@ -1,15 +1,22 @@
 package com.sgrep.proc;
 
-import java.lang.Character;
-import java.util.*;
 public class State{
     private int id;
+
+    public boolean isStart() {
+        return isStart;
+    }
+
+    public void setStart(boolean start) {
+        isStart = start;
+    }
+
     enum Type{
-        START,
         INTER,
         ACCEPT
     }
     private Type stateType;
+    private boolean isStart = false;
     public State(int id, Type sType){
         this.id = id;
         this.stateType = sType;
@@ -23,9 +30,6 @@ public class State{
     }
     public void setType(char t){
         switch(t){
-            case 'S':
-                this.stateType = Type.START;
-                break;
             case 'I':
                 this.stateType = Type.INTER;
                 break;

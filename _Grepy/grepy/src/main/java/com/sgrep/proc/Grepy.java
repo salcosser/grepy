@@ -2,88 +2,26 @@ package com.sgrep.proc;
 import java.lang.Character;
 
 import java.util.*;
-
+import java.util.ArrayList;
 public class Grepy{
-   public ArrayList<HashMap<Character,State>> NSTrans; // nfa states
-   public ArrayList<HashMap<Character,State>> DSTrans; //dfa states
+   public ArrayList<Transition> NSTrans; // nfa states
+   public ArrayList<Transition> DSTrans; //dfa states
+    int stateCounter = 0;
 
-    
-   public Grepy(){
-        this.NSTrans = new ArrayList<HashMap<Character,State>>();
-        this.DSTrans = new ArrayList<HashMap<Character, State>>();
+    public Grepy(){
+        this.NSTrans = new ArrayList<Transition>();
+        this.DSTrans = new ArrayList<Transition>();
 
         System.out.println("Grepy Initialized");
     }
     
-//    public ArrayList<Object> parseInput(String rawReg){
-//        ArrayList<Character> alphabet = new ArrayList<Character>();
-//        boolean parsing = true;
-//        ArrayList<String> subExpr = new ArrayList<String>();
-//        ArrayList<Integer> lPer = new ArrayList<Integer>();
-//        ArrayList<Integer> rPer = new ArrayList<Integer>();
-//        ArrayList<Integer> plus = new ArrayList<Integer>();
-//        ArrayList<Integer> star = new ArrayList<Integer>();
-//        for(int i = 0;i<rawReg.length();i++){
-//            char ch = rawReg.charAt(i);
-//            switch(ch){
-//                case '(':
-//                    lPer.add(i);
-//                    break;
-//                case ')':
-//                    rPer.add(i);
-//                    break;
-//                case '+':
-//                    plus.add(i);
-//                    break;
-//                case '*':
-//                    star.add(i);
-//                    break;
-//                default:
-//                    if(!alphabet.contains(rawReg.charAt(i)){
-//                    alphabet.add(rawReg.charAt(i));
-//                }
-//                }
-//        }
-//        int c_lPer = 0;
-//        int c_rPer = 0;
-//        int c_plus = 0;
-//        int c_star = 0;
-//        char c_char = '';
-//        int index = 0;
-//        c_rPer = rPer.get(0);
-//        index = c_rPer - 1;
-//        while(c_char != '('){
-//            c_char = rawReg.charAt(index);
-//            index--;
-//        }
-//        if(index != lPer.get(0)){   // we know this is a nested thing
-//            //mark this in the arraylist as a sub expression, to be rechecked later
-//        }
-//
-//
-//    }
 
-    public TStack preProc(String rawReg){
-       TStack stack = new TStack();
-       char[] chArr = rawReg.toCharArray();
 
-        for(char ch : chArr){
-            stack.push(ch);
-        }
-        return stack;
-    }
 
-//    public ArrayList<String> parser(String str){
-//       ArrayList<String> cGroups = new ArrayList<String>();
-//       cGroup = pIn(cGroups, str);
-//       for(String group : cGroups){
-//
-//       }
-//
-//
-//    }
 
-    public ArrayList<String> pIn(ArrayList<String> cGroups, String str) {
+
+
+    public ArrayList<String> pIn( String str) {
         char[] chAr = str.toCharArray();
         ArrayList<String> res = new ArrayList<String>();
         ArrayList<Integer> lParens = new ArrayList<Integer>();
@@ -94,24 +32,24 @@ public class Grepy{
         if (str.indexOf(')') != -1) {
             for (int i = 0; i < chAr.length; i++) {
                 if (chAr[i] == '(') {
-                    System.out.println("found a (");
+                //    System.out.println("found a (");
                     lParens.add(i);
                 } else if (chAr[i] == ')') {
-                    System.out.println("found a )");
+                 //   System.out.println("found a )");
                     int lastInd = lParens.get(lParens.size() - 1);
-                    System.out.println("Left Parens " + lParens);
+                   // System.out.println("Left Parens " + lParens);
                     String group = Integer.toString(lastInd) + '-' + Integer.toString(i + 1);
                     groups.add(group);
-                    System.out.println("Pop");
+                 //   System.out.println("Pop");
                     lParens.remove(lParens.size() - 1);
                 } else if (chAr[i] == '+') {
-                    System.out.println("found a +");
+               //     System.out.println("found a +");
                     choices.add(i);
                 } else if (chAr[i] == '*') {
-                    System.out.println("found a *");
+                 //   System.out.println("found a *");
                     if (chAr[(i - 1)] == ')') {
                         for (int x = 0;x<groups.size();x++) {
-                            System.out.println("in loop");
+                        //    System.out.println("in loop");
                             //  console.log("Groups "+ groups[n]);
                             //   console.log( "end" + groups[n].substr(groups[n].indexOf('-')+1) + ',' + (i+1));
                             String g = groups.get(x);
@@ -121,7 +59,7 @@ public class Grepy{
                             int end = Integer.parseInt(sGroup);
                             if (end == i) {
 
-                                System.out.println("Found a match.");
+                            //    System.out.println("Found a match.");
 //                                System.out.println(Integer.parseInt((groups.get(n).substring(0, groups.get(n).indexOf('-') + 1))) + i);
                                 groups.set(x, g.substring(0, g.indexOf('-') + 1) + (i+1));
 
@@ -146,38 +84,152 @@ public class Grepy{
         for(String group : groups){
             int lBound = Integer.parseInt(group.substring(0,group.indexOf('-')));
             int rBound = Integer.parseInt(group.substring(group.indexOf('-')+1));
+            String g = str.substring(lBound,rBound);
 
-            res.add(str.substring(lBound,rBound));
+
+            res.add(g);
         }
         return res;
 
 
     }
 
+    public boolean mProc(String str){
+       boolean valid = false;
+       ArrayList<String> parts = pIn(str);
+       ArrayList<Character> alphabet = pAlpha(str);
+        ArrayList<ArrayList<Transition>> nSegments = new ArrayList<ArrayList<Transition>>();
+        ArrayList<State> nStates = new ArrayList<State>();
+        ArrayList<ArrayList<Transition>> dSegmentts = new ArrayList<ArrayList<Transition>>();
+        ArrayList<State> dStates = new ArrayList<State>();
 
-//
-//        TNode cNode = stack.top;
-//        boolean processing = true;
-//        TNode lMark;
-//        TNode rMark;
-//
-//        while(processing){
-//            if(cNode.data instanceof char){
-//                if(
-//            }
-//
-//        }
-            //return res;
-//       }
+       for(String part : parts){
+           if(part.indexOf('(') == part.lastIndexOf('(')){
+               nSegments.add(new ArrayList<Transition>());
+               nPartParser(nSegments.get(nSegments.size()-1), nStates, part);
+               for(Transition t : nSegments.get(nSegments.size()-1)){
+                   System.out.println("from " + t.getfState().getId() + " | to " + t.gettState().getId()+ " by means of " + t.c);
+               }
+               //dPartParser(dParts, part);
+           }
+       }
+
+
+        return valid;
+    }
+
+    private ArrayList<Character> pAlpha(String str) {
+        char[] full = str.toCharArray();
+        ArrayList<Character> alpha = new ArrayList<Character>();
+        for (char c : full) {
+            if (!alpha.contains(c)) {
+                alpha.add(c);
+            }
+            ArrayList<Character> bad = new ArrayList<Character>();
+            bad.add('(');
+            bad.add(')');
+            bad.add('+');
+            bad.add('*');
+
+
+            alpha.removeAll(bad);
+
+        }
+        return alpha;
+    }
+
+    public void nPartParser(ArrayList<Transition> section, ArrayList<State> nStates, String str){
+        ArrayList<Character> subAlpha = pAlpha(str);
+       if(str.indexOf('(') >=0){
+           if(str.indexOf('*') >= 0){
+               if(str.indexOf('+')>= 0){
+                  n_cLoop(section, nStates, str, subAlpha);  //choice loop
+               }else{
+                   n_pLoop(section, nStates,str, subAlpha); //pattern loop
+               }
+           }else if(str.indexOf('+') >=0){
+               n_choice(section, nStates,str, subAlpha);    //simple choice
+           }
+       }else{
+           if(str.indexOf('+')>=0){
+               n_choice(section,nStates, str, subAlpha);       //simple choice
+           }else if(str.indexOf('*')>= 0){
+               n_repeat(section,nStates, str, subAlpha);        //repeat of one character
+           }else{
+               n_sChar(section,nStates, str, subAlpha);         //single character
+           }
+       }
+    }
 
 
 
+    private void n_cLoop(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
 
-    public int t1(String s){
-        if(s.equals("hi")){
-            return 8;
-        }else{
-            return 7;
+        State s = new State(stateCounter++, State.Type.ACCEPT);
+        s.setStart(true);
+        nStates.add(s);
+        for(char c : subAlpha){
+           section.add(new Transition(s,s,c));
         }
     }
+
+    private void n_pLoop(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
+
+        State s = new State(stateCounter++, State.Type.ACCEPT);
+        s.setStart(true);
+        nStates.add(s);
+        State prev = s;
+        String loop = str.substring(str.indexOf('(')+1, str.indexOf(')'));
+        if(loop.length() > 1){
+            for(int i = 0;i<loop.length();i++) {
+                if(i == loop.length()-1){
+                    section.add(new Transition(prev, s, loop.charAt(i)));
+                }else{
+                    State st = new State(stateCounter++, State.Type.INTER);
+                    nStates.add(st);
+                    section.add(new Transition(prev, st, loop.charAt(i)));
+                    prev = st;
+                }
+
+            }
+
+        }
+    }
+    private void n_choice(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
+
+       State s = new State(stateCounter++, State.Type.INTER);
+       s.setStart(true);
+       nStates.add(s);
+       State next = new State(stateCounter++, State.Type.ACCEPT);
+       nStates.add(next);
+       for(char c : subAlpha){
+           section.add(new Transition(s,next, c));
+       }
+    }
+    private void n_repeat(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
+
+       State s = new State(stateCounter++, State.Type.ACCEPT);
+       s.setStart(true);
+       nStates.add(s);
+       for(char c : subAlpha){
+           section.add(new Transition(s,s,c));
+       }
+    }
+
+    private void n_sChar(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
+       State s = new State(stateCounter++, State.Type.INTER);
+       s.setStart(true);
+       nStates.add(s);
+       State prev = s;
+        for(char c : subAlpha){
+            State next = new State(stateCounter++, State.Type.INTER);
+            nStates.add(next);
+            section.add(new Transition(prev,next,c));
+            prev = next;
+        }
+        nStates.get(nStates.size()-1).setType('A');
+    }
+
+
+
 }
