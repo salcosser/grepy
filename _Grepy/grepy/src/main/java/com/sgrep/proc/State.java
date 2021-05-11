@@ -21,6 +21,7 @@ public class State{
         this.id = id;
         this.stateType = sType;
     }
+    public State(){}
 
     public void setId(int id){
         this.id = id;

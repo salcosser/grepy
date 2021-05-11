@@ -6,6 +6,11 @@ import java.util.ArrayList;
 public class Grepy{
    public ArrayList<Transition> NSTrans; // nfa states
    public ArrayList<Transition> DSTrans; //dfa states
+    ArrayList<Character> alphabet;
+    State nStart = new State();
+    State dStart = new State();
+    ArrayList<State> nAccepts = new ArrayList<State>();
+    State dAccept = new State();
     int stateCounter = 0;
 
     public Grepy(){
@@ -28,7 +33,9 @@ public class Grepy{
         ArrayList<String> groups = new ArrayList<String>();
         ArrayList<Integer> choices = new ArrayList<Integer>();
         ArrayList<Integer> loops = new ArrayList<Integer>();
-
+        if(str.charAt(0) != '^' || str.charAt(str.length()-1) != '$'){
+            return new ArrayList<String>();
+        }
         if (str.indexOf(')') != -1) {
             for (int i = 0; i < chAr.length; i++) {
                 if (chAr[i] == '(') {
@@ -79,6 +86,9 @@ public class Grepy{
                 }
 
             }
+        }else{
+            String s = 1 + "-"+(str.length()-1);
+            groups.add(s);
         }
 
         for(String group : groups){
@@ -97,26 +107,34 @@ public class Grepy{
     public boolean mProc(String str){
        boolean valid = false;
        ArrayList<String> parts = pIn(str);
-       ArrayList<Character> alphabet = pAlpha(str);
+       if(parts.size() == 0){
+           System.out.println("Invalid Syntax in regex.");
+           return false;
+       }
+
+
+        this.alphabet = pAlpha(str);
         ArrayList<ArrayList<Transition>> nSegments = new ArrayList<ArrayList<Transition>>();
         ArrayList<State> nStates = new ArrayList<State>();
         ArrayList<ArrayList<Transition>> dSegmentts = new ArrayList<ArrayList<Transition>>();
         ArrayList<State> dStates = new ArrayList<State>();
-
+        HashMap<String,ArrayList<Transition>> partsMap = new HashMap<String, ArrayList<Transition>>();
        for(String part : parts){
            if(part.indexOf('(') == part.lastIndexOf('(')){
                nSegments.add(new ArrayList<Transition>());
                nPartParser(nSegments.get(nSegments.size()-1), nStates, part);
+               partsMap.put(part, nSegments.get(nSegments.size()-1));
                for(Transition t : nSegments.get(nSegments.size()-1)){
                    System.out.println("from " + t.getfState().getId() + " | to " + t.gettState().getId()+ " by means of " + t.c);
                }
                //dPartParser(dParts, part);
            }
        }
-
+       joinNfa(partsMap, str, nStates, parts);
 
         return valid;
     }
+
 
     private ArrayList<Character> pAlpha(String str) {
         char[] full = str.toCharArray();
@@ -138,48 +156,77 @@ public class Grepy{
         return alpha;
     }
 
-    public void nPartParser(ArrayList<Transition> section, ArrayList<State> nStates, String str){
+    public void nPartParser(ArrayList<Transition> section, ArrayList<State> nStates, String str) {
         ArrayList<Character> subAlpha = pAlpha(str);
-       if(str.indexOf('(') >=0){
-           if(str.indexOf('*') >= 0){
-               if(str.indexOf('+')>= 0){
-                  n_cLoop(section, nStates, str, subAlpha);  //choice loop
-               }else{
-                   n_pLoop(section, nStates,str, subAlpha); //pattern loop
-               }
-           }else if(str.indexOf('+') >=0){
-               n_choice(section, nStates,str, subAlpha);    //simple choice
-           }
-       }else{
-           if(str.indexOf('+')>=0){
-               n_choice(section,nStates, str, subAlpha);       //simple choice
-           }else if(str.indexOf('*')>= 0){
-               n_repeat(section,nStates, str, subAlpha);        //repeat of one character
-           }else{
-               n_sChar(section,nStates, str, subAlpha);         //single character
-           }
-       }
+
+        State s = new State(stateCounter++, State.Type.INTER);
+        s.setStart(true);
+        nStates.add(s);
+
+
+            if (str.indexOf('*') >= 0) {
+                if (str.indexOf('+') >= 0) {
+                    System.out.println(1111);
+                    n_cLoop(section, nStates, str, subAlpha, s);  //choice loop
+                } else {
+                    System.out.println(2222);
+                    n_pLoop(section, nStates, str, subAlpha, s); //pattern
+                }
+            } else if (str.indexOf('+') >= 0) {
+                System.out.println(4444);
+                n_choice(section, nStates, str, subAlpha, s);       //simple choice
+            }  else {
+                System.out.println("getting here");
+                n_exact(section, nStates, str, subAlpha, s);         //single character / non looping pattern
+            }
+
+
+    }
+
+    private void n_exact(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha, State s) {
+        State prev = s;
+        String loop;
+        if(str.contains("(")) {
+            loop  =str.substring(str.indexOf('(') + 1, str.indexOf(')'));
+        }else{
+            loop = str;
+        }
+
+        if(loop.length() > 1){
+            for(int i = 0;i<loop.length();i++) {
+
+                    State st = new State(stateCounter++, State.Type.INTER);
+                    nStates.add(st);
+                    section.add(new Transition(prev, st, loop.charAt(i)));
+                    prev = st;
+
+
+            }
+
+        }
     }
 
 
 
-    private void n_cLoop(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
 
-        State s = new State(stateCounter++, State.Type.ACCEPT);
-        s.setStart(true);
-        nStates.add(s);
+    private void n_cLoop(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha, State s) {
+
         for(char c : subAlpha){
            section.add(new Transition(s,s,c));
         }
     }
 
-    private void n_pLoop(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
+    private void n_pLoop(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha, State s) {
 
-        State s = new State(stateCounter++, State.Type.ACCEPT);
-        s.setStart(true);
-        nStates.add(s);
+
         State prev = s;
-        String loop = str.substring(str.indexOf('(')+1, str.indexOf(')'));
+        String loop;
+               if(str.contains("(")) {
+                 loop  =str.substring(str.indexOf('(') + 1, str.indexOf(')'));
+               }else{
+                   loop = str;
+               }
+
         if(loop.length() > 1){
             for(int i = 0;i<loop.length();i++) {
                 if(i == loop.length()-1){
@@ -195,41 +242,54 @@ public class Grepy{
 
         }
     }
-    private void n_choice(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
+    private void n_choice(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha, State s) {
 
-       State s = new State(stateCounter++, State.Type.INTER);
-       s.setStart(true);
-       nStates.add(s);
        State next = new State(stateCounter++, State.Type.ACCEPT);
        nStates.add(next);
        for(char c : subAlpha){
            section.add(new Transition(s,next, c));
        }
     }
-    private void n_repeat(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
 
-       State s = new State(stateCounter++, State.Type.ACCEPT);
-       s.setStart(true);
-       nStates.add(s);
-       for(char c : subAlpha){
-           section.add(new Transition(s,s,c));
-       }
-    }
 
-    private void n_sChar(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha) {
-       State s = new State(stateCounter++, State.Type.INTER);
-       s.setStart(true);
-       nStates.add(s);
-       State prev = s;
-        for(char c : subAlpha){
-            State next = new State(stateCounter++, State.Type.INTER);
-            nStates.add(next);
-            section.add(new Transition(prev,next,c));
-            prev = next;
+
+
+    private void joinNfa(HashMap<String, ArrayList<Transition>> partsMap, String str, ArrayList<State> nStates, ArrayList<String> parts) {
+        HashMap<String, ArrayList<String>> mappedParts = new HashMap<String,ArrayList<String>>();
+        ArrayList<String> cParts = new ArrayList<String>();
+        ArrayList<String> tParts = new ArrayList<String>();
+        for(String part : parts){
+            if(part.indexOf('(') != part.lastIndexOf('(')){
+                mappedParts.put(part, new ArrayList<String>());
+                cParts.add(part);
+            }else{
+                tParts.add(part);
+            }
         }
-        nStates.get(nStates.size()-1).setType('A');
-    }
+        for(int i = 0;i<cParts.size();i++){     //not foreach loops to avoid two of the same terminal part
+            for(int n = 0;n<tParts.size();n++){
+                if(cParts.get(i).contains(tParts.get(n))){
+                    mappedParts.get(cParts.get(i)).add(tParts.get(n));
+                    tParts.remove(tParts.get(n));
 
+                }
+            }
+        }
+
+        for(String p : cParts){
+            ArrayList<String> sParts = mappedParts.get(p);
+            String remTest = p;
+            for(String sPart  : sParts){
+
+                int start = remTest.indexOf(sPart);
+                int end = remTest.indexOf(sPart)+sPart.length();
+                String res = remTest.substring(0, start) + remTest.substring(end);
+            }
+            if(remTest.contains("+")){
+                // its a choice between
+            }
+        }
+    }
 
 
 }
