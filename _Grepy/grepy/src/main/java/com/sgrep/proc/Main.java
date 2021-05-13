@@ -13,6 +13,6 @@ public class Main {
         String realRes = res.toString();
         System.out.println(realRes);
         gr.mProc(args[0]);
-        System.out.println(gr.stateCounter);
+        System.out.println(gr.nStates.size());
     }
 }

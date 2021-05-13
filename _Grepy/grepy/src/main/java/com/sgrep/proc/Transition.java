@@ -35,6 +35,9 @@ public class Transition {
         this.fState = fState;
         this.tState = tState;
         this.c = c;
-        System.out.println("Transition from " + this.fState + " to "+ this.tState+ " my means of " + this.c);
+        //System.out.println("Transition from " + this.fState.getId() + " to "+ this.tState.getId()+ " my means of " + this.c);
+    }
+    public  void  explain(){
+        System.out.println("Transition from " + this.fState.getId() + " to "+ this.tState.getId()+ " my means of " + this.c);
     }
 }
