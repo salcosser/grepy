@@ -53,6 +53,7 @@ public class Main {
             gr.mProc(regex);
         }else{
             System.out.println("Please input at least the regex file location");
+            return;
         }
         for(String s : testCases){ // run the test cases
             if(gr.passes(s)){
