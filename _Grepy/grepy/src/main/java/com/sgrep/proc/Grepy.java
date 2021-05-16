@@ -20,27 +20,27 @@ public class Grepy{
     State dAccept = new State();
     int stateCounter = 0;
     int dStateCounter = 0;
-    ArrayList<ArrayList<Transition>> nSegments = new ArrayList<ArrayList<Transition>>();
-    ArrayList<State> nStates = new ArrayList<State>();
-    ArrayList<ArrayList<Transition>> dSegments = new ArrayList<ArrayList<Transition>>();
-    ArrayList<State> dStates = new ArrayList<State>();
-    HashMap<String, ArrayList<Transition>> partsMap = new HashMap<String, ArrayList<Transition>>();
-    HashMap<String, ArrayList<Transition>> dPartsMap = new HashMap<String, ArrayList<Transition>>();
-    ArrayList<ArrayList<Transition>> dStateSet = new ArrayList<ArrayList<Transition>>();
+    ArrayList<ArrayList<Transition>> nSegments = new ArrayList<ArrayList<Transition>>(); //parts of the nfa
+    ArrayList<State> nStates = new ArrayList<State>(); // states for the nfa
+    ArrayList<ArrayList<Transition>> dSegments = new ArrayList<ArrayList<Transition>>(); // parts of the dfa
+    ArrayList<State> dStates = new ArrayList<State>();      //dfa states
+    HashMap<String, ArrayList<Transition>> partsMap = new HashMap<String, ArrayList<Transition>>(); // all transitions associated with each part of the nfa
+    HashMap<String, ArrayList<Transition>> dPartsMap = new HashMap<String, ArrayList<Transition>>(); //all transitions associated with each part of the dfa
+    ArrayList<ArrayList<Transition>> dStateSet = new ArrayList<ArrayList<Transition>>();    //numbered indexed states for dfa and nfa
     ArrayList<ArrayList<Transition>> nStateSet = new ArrayList<ArrayList<Transition>>();
-    ArrayList<Transition> holdingBayD = new ArrayList<Transition>();
+    ArrayList<Transition> holdingBayD = new ArrayList<Transition>();        // combined lists of transitions for dfa and nfa
     ArrayList<Transition> holdingBayN = new ArrayList<Transition>();
-    int endSD = 0;
-    int startSD =0;
+    int endSD = 0;          // start and end states for both dfa and nfa
+    int startSD =0;             //NOTE: only one end state is used for the NFA, therefore, only one is being kept track of
     int endSN = 0;
     int startSN =0;
-    public Grepy(String nFile,String dFile){
+    public Grepy(String nFile,String dFile){    // init
         this.NSTrans = new ArrayList<Transition>();
         this.DSTrans = new ArrayList<Transition>();
         this.alphabet = new ArrayList<Character>();
         this.nFile = nFile;
         this.dFile = dFile;
-        // // // System.out.println("Grepy Initialized");
+
     }
     
 
@@ -51,7 +51,7 @@ public class Grepy{
 
     public ArrayList<String> pIn( String str) {
 
-        char[] chAr = str.toCharArray();
+        char[] chAr = str.toCharArray();                    // accumulators of different parts of the regex
         ArrayList<String> res = new ArrayList<String>();
         ArrayList<Integer> lParens = new ArrayList<Integer>();
         ArrayList<String> groups = new ArrayList<String>();
@@ -64,22 +64,22 @@ public class Grepy{
         if (str.indexOf(')') != -1) {
             for (int i = 0; i < chAr.length; i++) {
                 if (chAr[i] == '(') {
-                   // // // System.out.println("found a (");
+                                                       // //found a (
                     lParens.add(i);
                 } else if (chAr[i] == ')') {
-                    // // // System.out.println("found a )");
+                                                                  // // // found a )
                     int lastInd = lParens.get(lParens.size() - 1);
-                   // // // System.out.println("Left Parens " + lParens);
-                    String group = Integer.toString(lastInd) + '-' + Integer.toString(i + 1);
+
+                    String group = Integer.toString(lastInd) + '-' + Integer.toString(i + 1);   // this is a group that was closed by a parentheses
                     groups.add(group);
-                    // // // System.out.println("Pop");
+
                     lParens.remove(lParens.size() - 1);
                 } else if (chAr[i] == '+') {
                    // // // System.out.println("found a +");
                     choices.add(i);
                 } else if (chAr[i] == '*') {
                     // // // System.out.println("found a *");
-                    if (chAr[(i - 1)] == ')') {
+                    if (chAr[(i - 1)] == ')') {                 //if the star was associated with a pattern loop
                         for (int x = 0;x<groups.size();x++) {
 
                             String g = groups.get(x);
@@ -113,7 +113,7 @@ public class Grepy{
                     
                 }
 
-            }
+            }                   //below processes simple regexes without parentheses
         }else{
             boolean open = false;
             char[] chArr = str.toCharArray();
@@ -192,7 +192,7 @@ public class Grepy{
 
         }
 
-        for(String group : groups){
+        for(String group : groups){     //turning all index ranges into actual usable substrings
            // // System.out.println(group);
             int lBound = Integer.parseInt(group.substring(0,group.indexOf('-')));
 
@@ -212,18 +212,18 @@ public class Grepy{
         return res;
 
 
-    }
+    }   // processing the regex into managable parts
 
-    public boolean mProc(String str){
+    public boolean mProc(String str){ // main process for initializing the state machines
        boolean valid = false;
-        if(str.charAt(0) != '^' || str.charAt(str.length()-1) != '$'){
+        if(str.charAt(0) != '^' || str.charAt(str.length()-1) != '$'){      //checking that the regex has the correct format
             return false;
         }else {
             String newStr = str.substring(1, str.length() - 1);
 
 
             ArrayList<String> parts = pIn(newStr);
-            for(int  p = 0;p<parts.size();p++){
+            for(int  p = 0;p<parts.size();p++){ // getting rid of any blank substrings that made it through
                 if(parts.get(p).length() == 0){
                     parts.remove(p);
                 }
@@ -232,7 +232,7 @@ public class Grepy{
 
             this.alphabet = pAlpha(newStr);
 
-            for (String part : parts) {
+            for (String part : parts) { // processing each part
                  //// System.out.println(part);
 
                 if (part.indexOf('(') != part.lastIndexOf('(')) {
@@ -248,23 +248,23 @@ public class Grepy{
 
 
             }
-            joinNfa(partsMap, newStr, nStates, parts);
+            joinNfa(partsMap, newStr, nStates, parts);  // sending sub parts to be joined into an nfa
             // System.out.println("Listing Transitions");
-            for(int i= 0;i<nStates.size();i++){
+            for(int i= 0;i<nStates.size();i++){     // resetting the state ids, as they may have been altered by the joining  process
                 nStates.get(i).setId(i);
 
 
             }
-            for(String part : parts){
-                ArrayList<Transition> tempParts = partsMap.get(part);
+//            for(String part : parts){ //
+//                ArrayList<Transition> tempParts = partsMap.get(part);
+//
+//                for(Transition t: tempParts){
+//                    t.explain();
+//                }
+//            }
+            State err = new State(dStateCounter++, State.Type.ERROR);   // creating the error state for the dfa
 
-                for(Transition t: tempParts){
-                    t.explain();
-                }
-            }
-            State err = new State(dStateCounter++, State.Type.ERROR);
-
-            for(String pt : parts){
+            for(String pt : parts){             //processing each part for the dfa
                 if (pt.indexOf('(') != pt.lastIndexOf('(')) {
                     continue;
                 }
@@ -273,13 +273,10 @@ public class Grepy{
                 dPartsMap.put(pt, dSegments.get(dSegments.size() -1));
 
             }
-            joinDfa(dPartsMap, newStr, dStates, parts, err);
+            joinDfa(dPartsMap, newStr, dStates, parts, err);        //joining the dfa parts
 
-            dStates.add(err);
-            dSegments.add(new ArrayList<Transition>());
-            for(char c : this.alphabet){
-                dSegments.get(dSegments.size()-1).add(new Transition(err, err, c));
-            }
+            dStates.add(err);   //adding the error state before updating the state id numbers
+
             for(int i= 0;i<dStates.size();i++){
                 dStates.get(i).setId(i);
             }
@@ -288,16 +285,16 @@ public class Grepy{
             // // System.out.println(parts);
 
 
-            System.out.println("Listing DFA Transitions");
-            for(String part : parts){
-                ArrayList<Transition> tempParts = dPartsMap.get(part);
-                // System.out.println("NEW PART");
-                for(Transition t: tempParts){
-                    t.explain();
-                }
-            }
+//            System.out.println("Listing DFA Transitions");
+//            for(String part : parts){
+//                ArrayList<Transition> tempParts = dPartsMap.get(part);
+//                // System.out.println("NEW PART");
+//                for(Transition t: tempParts){
+//                    t.explain();
+//                }
+//            }
 
-            organizeSets(parts);
+            organizeSets(parts, err);   //grouping together transitions
             try {
 
                 printDfa();
@@ -326,8 +323,8 @@ public class Grepy{
     private void printNfa() throws IOException {
         String fLoc = "";
 
-        if(nFile.equals("")){
-            System.out.println("in here");
+        if(nFile.equals("")){ // if there is no output file specified, make one, otherwise use what is given
+           // System.out.println("in here");
             File f = new File("NFA.DOT");
             if(!f.createNewFile()){
                 f.delete();
@@ -342,7 +339,7 @@ public class Grepy{
         BufferedWriter buffer = new BufferedWriter(writer);
 
 
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<String>();  // get the start and end states
         for(State s : nStates){
             if(s.getType() == State.Type.ACCEPT){
                 endSN = s.getId();
@@ -353,7 +350,7 @@ public class Grepy{
 
 
 
-        for(int i = 0;i<nStateSet.size();i++) {
+        for(int i = 0;i<nStateSet.size();i++) { // create the dot file part of all of the transitions
 
             for(Transition t : nStateSet.get(i)) {
 
@@ -361,7 +358,7 @@ public class Grepy{
                 lines.add(out);
             }
         }
-        buffer.write("digraph NFA {\n");
+        buffer.write("digraph NFA {\n");    // formatting of the dot file
         buffer.write("rankdir=q\n");
         buffer.write("size=\"8,5\"\n");
 
@@ -382,7 +379,7 @@ public class Grepy{
     private void printDfa() throws IOException {
        String fLoc = "";
 
-        if(dFile.equals("")){
+        if(dFile.equals("")){ // create an output file if one is not specified
             System.out.println("in here");
             File f = new File("DFA.DOT");
             if(!f.createNewFile()){
@@ -400,7 +397,7 @@ public class Grepy{
 
         ArrayList<String> lines = new ArrayList<String>();
 
-        for(State s : dStates){
+        for(State s : dStates){ //grab the start and end states
             if(s.getType() == State.Type.ACCEPT){
                 endSD = s.getId();
             }else if(s.isStart()){
@@ -412,13 +409,13 @@ public class Grepy{
 
         for(int i = 0;i<dStateSet.size();i++) {
 
-            for(Transition t : dStateSet.get(i)) {
+            for(Transition t : dStateSet.get(i)) { // format the section of the file with all of the transitions
 
                 String out = "q_"+t.getfState().getId() + " -> " + "q_"+t.gettState().getId() + " [ label= \"" + t.getC() + "\"];\n";
                 lines.add(out);
             }
         }
-        buffer.write("digraph DFA {\n");
+        buffer.write("digraph DFA {\n");    // dot file formatting
         buffer.write("rankdir=q\n");
         buffer.write("size=\"8,5\"\n");
 
@@ -437,7 +434,7 @@ public class Grepy{
 
 
 
-    private void organizeSets(ArrayList<String> parts){
+    private void organizeSets(ArrayList<String> parts, State err){ // grouping all of the scattered transitions together
         // make one big set
         //put them in place
 
@@ -447,7 +444,12 @@ public class Grepy{
             holdingBayN.addAll(partsMap.get(p));
         }
         //huge sets
-
+        dSegments.add(new ArrayList<Transition>());
+        for(char c : this.alphabet){
+            System.out.println("GOT HERE");
+            holdingBayD.add(new Transition(err, err, c));
+            //dSegments.get(dSegments.size()-1).get(0).explain();
+        }
 
         for(int i = 0;i<dStateCounter;i++){
             dStateSet.add(new ArrayList<Transition>());
@@ -500,14 +502,14 @@ public class Grepy{
          //System.out.println(enumStr);
 
         ArrayList<Transition> lTrans = new ArrayList<Transition>();
-        if(enumStr.contains("+")) {
+        if(enumStr.contains("+")) { // if there is a choice
             // System.out.println(1111);
-            if (enumStr.indexOf("+") != enumStr.lastIndexOf("+")) {
+            if (enumStr.indexOf("+") != enumStr.lastIndexOf("+")) { // if there is more than one choice, which wouldn't happen
                 // System.out.println(2222);
                 int pt = enumStr.indexOf("+");
                 State lSt = new State();
 
-                while (pt != -1) {
+                while (pt != -1) { // finding the subparts
                     int l1 = 0;
                     int l2 = 0;
                     int r1 = 0;
@@ -538,7 +540,7 @@ public class Grepy{
                          lTrans = dPartsMap.get(tParts.get(left));
                         ArrayList<Transition> rTrans = dPartsMap.get(tParts.get(right));
 //                        lTrans.get(lTrans.size() - 1).gettState().setType('A');
-                        for(int x = (lTrans.size()-1); x>= 0;x--){
+                        for(int x = (lTrans.size()-1); x>= 0;x--){ // setting the last state in the order to the accept state
                             if(lTrans.get(x).gettState().getType() != State.Type.ERROR){
                                 lTrans.get(x).gettState().setType('A');
                                 break;
@@ -546,7 +548,7 @@ public class Grepy{
                         }
                          lSt = lTrans.get(0).getfState();
 
-                        if(lTrans.get(0).getC() == rTrans.get(0).getC() ){
+                        if(lTrans.get(0).getC() == rTrans.get(0).getC() ){      // in case two of the segments share beginnings, update the joined state
                             boolean same = true;
                             int lC = 0;
 
@@ -561,7 +563,7 @@ public class Grepy{
                         }else{
                             rTrans.get(0).setfState(lSt);
                         }
-                        State cTState = rTrans.get(0).fState;
+                        State cTState = rTrans.get(0).fState; // joining the left to the right of the choice
                         for(Transition t: rTrans){
                             if(t.getfState() == cTState){
                                 // System.out.println("This worked ede");
@@ -571,14 +573,14 @@ public class Grepy{
                                 t.settState(lTrans.get(0).getfState());
                             }
                         }
-                        dStates.remove(cTState);
+                        dStates.remove(cTState); // removing the unecessary statea
 
 
 
 
 
 
-                        if (pt == enumStr.lastIndexOf("+")) {
+                        if (pt == enumStr.lastIndexOf("+")) {           // search for the next choice
                             break;
                         } else {
                             pt = enumStr.indexOf("+", pt + 1);
@@ -598,7 +600,7 @@ public class Grepy{
                         int right = Integer.parseInt(enumStr.substring(l2+1,r2));
 
 
-                        ArrayList<Transition> rTrans = dPartsMap.get(tParts.get(right));
+                        ArrayList<Transition> rTrans = dPartsMap.get(tParts.get(right)); // grab the parts
                         lSt = lTrans.get(0).getfState();
                         if(lTrans.get(0).getC() == rTrans.get(0).getC()){
                             boolean same = true;
@@ -625,7 +627,7 @@ public class Grepy{
                                 }
                             }
                         }
-                        State cTState = rTrans.get(0).fState;
+                        State cTState = rTrans.get(0).fState;   // linking up the parts
                         for(Transition t: rTrans){
                             if(t.getfState() == cTState){
                                 // System.out.println("This worked ede");
@@ -674,7 +676,7 @@ public class Grepy{
                 lTrans = dPartsMap.get(tParts.get(left));
                 ArrayList<Transition> rTrans = dPartsMap.get(tParts.get(right));
                 //lTrans.get(lTrans.size()-1).gettState().setType('A');
-                State lastRs = new State();
+                State lastRs = new State();                 // getting the last right side state
                 for(int y = (rTrans.size()-1); y>= 0;y--){
                     if(rTrans.get(y).gettState().getType() != State.Type.ERROR){
                         rTrans.get(y).gettState().setType('A');
@@ -693,10 +695,10 @@ public class Grepy{
                         t.settState(lTrans.get(0).getfState());
                     }
                 }
-                dStates.remove(cTState);
+                dStates.remove(cTState); // joining the parts and removing unicessary state
 
 
-                if (tParts.get(left).length() == 1 && tParts.get(right).length() == 1) {
+                if (tParts.get(left).length() == 1 && tParts.get(right).length() == 1) {                // any reference to the old state is updated
                     State lastLs = new State();
                     for (int e = lTrans.size() - 1; e >= 0; e--) {
                         if (lTrans.get(e).gettState().getType() != State.Type.ERROR) {
@@ -765,7 +767,7 @@ public class Grepy{
 
 
 
-
+// finding and removing conflicting error states
 
                    for(int v = 0;v<lTrans.size();v++) {
                         if ((lTrans.get(v).getC() == rTrans.get(0).getC()) && (lTrans.get(v).gettState().getType() == State.Type.ERROR) && lTrans.get(v).getfState() == rTrans.get(0).getfState()) {
@@ -785,6 +787,9 @@ public class Grepy{
 //                    for(Transition d : lTrans){
 //                        d.explain();
 //                    }
+
+
+                    // updating the new error transitions
                     ArrayList<Character> alphCpy = new ArrayList<Character>(alphabet);
                     for(int u = 0; u<lTrans.size();u++){
                         if(alphCpy.contains(lTrans.get(u).getC()) && lTrans.get(u).getfState() == lSt2) {
@@ -851,16 +856,16 @@ public class Grepy{
 
 
                     }else{
-                         System.out.println("Diagnostics:");
-                        for(Transition t : temp){
-                           t.explain();
-                        }
+//                         System.out.println("Diagnostics:");
+//                        for(Transition t : temp){
+//                           t.explain();
+//                        }
                         // System.out.println("Getting in here");
                         cSet = dPartsMap.get(tParts.get(x));
                         State cTState = cSet.get(0).fState;
 
                         for(Transition t: cSet){
-                            if(t.getfState() == cTState && t.gettState() == cTState){
+                            if(t.getfState() == cTState && t.gettState() == cTState){   // linking the last left to the first right
                                 // System.out.println("This worked ede");
                                 t.setfState(lastS);
                                 t.settState(lastS);
@@ -872,23 +877,15 @@ public class Grepy{
                             }
                         }
                         //cSet.get(0).setfState(lastS);
-                        dStates.remove(cTState);
+                        dStates.remove(cTState);            // removing irrelevant state
                         ArrayList<Transition> lastSet = dPartsMap.get(tParts.get(x-1));
-//                        for(int v = 0;v<lastSet.size();v++) {
-//                            if ((lastSet.get(v).getC() == cSet.get(0).getC()) && (lastSet.get(v).getfState().getType() == State.Type.ERROR)) {
-//                                lastSet.remove(v);
-//                                // System.out.println("OOF");
-//                            }
-//                        }
 
                         for(int  d = 0;d<cSet.size();d++){
 //
-                            if(cSet.get(d).getfState() == lastS && cSet.get(d).gettState().getType() == State.Type.ERROR){
-                                // System.out.println("----------");
-                            //    cSet.get(d).explain();
+                            if(cSet.get(d).getfState() == lastS && cSet.get(d).gettState().getType() == State.Type.ERROR){  // removing irrelevantt error transitions
+
                                 cSet.remove(d);
 
-                                // System.out.println("####REMOVED####");
                                 if(cSet.size() == 0){
                                     break;
                                 }
@@ -901,9 +898,7 @@ public class Grepy{
                             if(lastSet.get(c).getfState() == lastS && lastSet.get(c).gettState().getType() == State.Type.ERROR){
                                 // System.out.println("FOUND AN ERROR");
                                 if(lastSet.get(c).getC() == cSet.get(0).getC()){
-                                    // System.out.println("__________________");
-                               //     lastSet.get(c).explain();
-                                    // System.out.println("Remmed from new set");
+
                                     lastSet.remove(c);
                                     if(lastSet.size() == 0){
                                        break;
@@ -926,7 +921,7 @@ public class Grepy{
 //                        lastS = cSetLast;
                     }
                 }
-                lastS.setType('A');
+                lastS.setType('A');             // setting the last state to being an accept state
                 ArrayList<Character> alphCpy = new ArrayList<Character>(alphabet);
                 for(int u = 0; u<cSet.size();u++){
                     if(alphCpy.contains(cSet.get(u).getC()) && cSet.get(u).getfState() == lastS) {
@@ -950,7 +945,7 @@ public class Grepy{
 
     }
 
-    private void dPartParser(ArrayList<Transition> section, ArrayList<State> dStates,  String str, State err) {
+    private void dPartParser(ArrayList<Transition> section, ArrayList<State> dStates,  String str, State err) { // method used to decide which method to use to form the sub segment of the regex
         ArrayList<Character> subAlpha = pAlpha(str);
         // // System.out.println("parsing"+ str);
         State s = new State(dStateCounter++, State.Type.INTER);
@@ -988,21 +983,20 @@ public class Grepy{
         ArrayList<Character> erC = this.alphabet;
         if(loop.length() > 1){
             for(int i = 0;i<loop.length();i++) {
-                // System.out.println("DOING " + loop.charAt(i));
-                // System.out.println("2344111");
 
 
-                State st = new State(dStateCounter++, State.Type.INTER);
+
+                State st = new State(dStateCounter++, State.Type.INTER);    // make a new state, and jump to that one
                 dStates.add(st);
                 section.add(new Transition(prev, st, loop.charAt(i)));
-                if(i == 0) {
+                if(i == 0) {        // if it doesnt match the current transition, assume its an error for now
                     for (Character c : erC) {
                         if (c == loop.charAt(i)) {
                             continue;
                         }
                         section.add(new Transition(prev, err, c));
                     }
-                    // System.out.println("Beep boop");
+
                     prev = st;
                     continue;
                 }else{
@@ -1017,7 +1011,7 @@ public class Grepy{
                 }
 
 
-                // System.out.println("Beep3333 boop");
+
 
             }
             for(Character c : erC){
@@ -1030,7 +1024,7 @@ public class Grepy{
             dStates.add(nState);
             ArrayList<Character> erC2 = this.alphabet;
 
-            // // System.out.println("this is the break" + loop);
+
             section.add(new Transition(prev, nState, loop.charAt(0)));
             for(char d : erC2){
                 section.add(new Transition(nState,err,d));
@@ -1049,20 +1043,20 @@ public class Grepy{
         State next = new State(dStateCounter++, State.Type.ACCEPT);
         dStates.add(next);
         ArrayList<Character> erC = this.alphabet;
-        for(char c : subAlpha){
+        for(char c : subAlpha){ // trans for each of the choices
 
             erC.remove(c);
             section.add(new Transition(s,next, c));
 
         }
-        for(char x : erC){
+        for(char x : erC){          // otherwise, assume it's an error
             section.add(new Transition(s,err,x ));
         }
-        System.out.println("PREPPROC");
+
         for(Transition se : section){
             se.explain();
         }
-        System.out.println("!!!!!!!!!!");
+
     }
 
     private void d_pLoop(ArrayList<Transition> section, ArrayList<State> dStates, String str, ArrayList<Character> subAlpha, State s, State err) {
@@ -1075,7 +1069,7 @@ public class Grepy{
         }
 
 
-        if(loop.length() > 1){
+        if(loop.length() > 1){  // unless it is the last part of the pattern, jump to next state. if it is the last part of the pattern, go back to the beginning
             for(int i = 0;i<loop.length();i++) {
                 ArrayList<Character> erC = this.alphabet;
 
@@ -1135,7 +1129,7 @@ public class Grepy{
     }
 
     private void d_cLoop(ArrayList<Transition> section, ArrayList<State> dStates, String str, ArrayList<Character> subAlpha, State s, State err) {
-        for(char c : subAlpha){
+        for(char c : subAlpha){         // keep in the state if it is part of the choice, otherwise, error out
             section.add(new Transition(s,s,c));
         }
         for(char x: this.alphabet){
@@ -1146,7 +1140,7 @@ public class Grepy{
     }
 
 
-    private ArrayList<Character> pAlpha(String str) {
+    private ArrayList<Character> pAlpha(String str) { // grab any characters that aren't reserved and throw them in a character ArrayList
         char[] full = str.toCharArray();
         ArrayList<Character> alpha = new ArrayList<Character>();
         for (char c : full) {
@@ -1166,7 +1160,7 @@ public class Grepy{
         return alpha;
     }
 
-    public void nPartParser(ArrayList<Transition> section, ArrayList<State> nStates, String str) {
+    public void nPartParser(ArrayList<Transition> section, ArrayList<State> nStates, String str) { // method used to decide which method to use to parse sub expression
         ArrayList<Character> subAlpha = pAlpha(str);
         // System.out.println("parsing"+ str);
         State s = new State(stateCounter++, State.Type.INTER);
@@ -1204,7 +1198,7 @@ public class Grepy{
         }
 
 
-        if(loop.length() > 1){
+        if(loop.length() > 1){ // for each thing in the pattern, move forward one state
             for(int i = 0;i<loop.length();i++) {
 
                     State st = new State(stateCounter++, State.Type.INTER);
@@ -1228,7 +1222,7 @@ public class Grepy{
 
     private void n_cLoop(ArrayList<Transition> section, ArrayList<State> nStates, String str, ArrayList<Character> subAlpha, State s) {
         // // System.out.println(1111);
-        for(char c : subAlpha){
+        for(char c : subAlpha){ // stay in the same state if it is either of the choices
            section.add(new Transition(s,s,c));
         }
     }
@@ -1244,7 +1238,7 @@ public class Grepy{
                    loop = Character.toString(str.charAt(1));
                }
 
-        if(loop.length() > 1){
+        if(loop.length() > 1){  // keep adding states until the last part of the pattern, then return back to the beginning
             for(int i = 0;i<loop.length();i++) {
                 if(i == loop.length()-1){
                     section.add(new Transition(prev, s, loop.charAt(i)));
@@ -1265,7 +1259,7 @@ public class Grepy{
         // // System.out.println(3333);
        State next = new State(stateCounter++, State.Type.ACCEPT);
        nStates.add(next);
-       for(char c : subAlpha){
+       for(char c : subAlpha){ // move to the new state for either of the two choices
            section.add(new Transition(s,next, c));
        }
     }
@@ -1352,14 +1346,14 @@ public class Grepy{
                       ArrayList<Transition> rTrans = partsMap.get(tParts.get(right));
                      State clEnd = lTrans.get(lTrans.size()-1).gettState();
                       State crEnd = rTrans.get(rTrans.size()-1).gettState();
-                      lTrans.add(new Transition(clEnd, endS, '~'));
+                      lTrans.add(new Transition(clEnd, endS, '~')); // use ~ to signify epsilon transitions
                       rTrans.add(new Transition(crEnd, endS, '~'));
                        lSt = lTrans.get(0).fState;
                       lSt.setStart(false);
 
                       State r1State = rTrans.get(0).fState;
                         r1State.setStart(false);
-                      lTrans.add(0, new Transition(nSt,lSt, '~'));
+                      lTrans.add(0, new Transition(nSt,lSt, '~')); // use these to link the two parts together
                       rTrans.add(0, new Transition(nSt,r1State, '~'));
                       if(pt == enumStr.lastIndexOf("+")){
                           break;
@@ -1382,7 +1376,7 @@ public class Grepy{
 
                       ArrayList<Transition> rTrans = partsMap.get(tParts.get(right));
 
-                      State ccrEnd = rTrans.get(rTrans.size()-1).gettState();
+                      State ccrEnd = rTrans.get(rTrans.size()-1).gettState(); // link both parts back up
                       rTrans.add(new Transition(ccrEnd, endS, '~'));
                       State r1State = rTrans.get(0).fState;
                         r1State.setStart(false);
@@ -1426,7 +1420,7 @@ public class Grepy{
               State curLEnd = lTrans.get(lTrans.size()-1).gettState();
               State curREnd = rTrans.get(rTrans.size()-1).gettState();
               lTrans.add(new Transition(curLEnd, endS, '~'));
-              rTrans.add(new Transition(curREnd, endS,'~'));
+              rTrans.add(new Transition(curREnd, endS,'~'));    // use epsilon transitions to connect
 
               State l1State = lTrans.get(0).fState;
               l1State.setStart(false);
@@ -1471,14 +1465,14 @@ public class Grepy{
     }
 
 
-    public boolean passes(String s) {
+    public boolean passes(String s) { // used to test the actual input strings
         int cState = startSD;
         System.out.println("Attempting to get to" + endSD);
         char[]  chars = s.toCharArray();
         for(char c : chars){
             for(Transition t: holdingBayD ){
                 if(t.getC() == c && t.getfState().getId() == cState){
-                   System.out.println("Going from state " + cState + " to " + t.gettState().getId());
+                   System.out.println("Going from state " + cState + " to " + t.gettState().getId());       // from the current state, find the next hop based on the transition for that state that uses that character
                     cState = t.gettState().getId();
 
                     break;

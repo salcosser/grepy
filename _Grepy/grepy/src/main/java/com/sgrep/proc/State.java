@@ -30,7 +30,7 @@ public class State{
     public int getId(){
         return id;
     }
-    public void setType(char t){
+    public void setType(char t){ // used to set the type of the state
         switch(t){
             case 'I':
                 this.stateType = Type.INTER;
@@ -48,7 +48,7 @@ public class State{
     public Type getType(){
         return this.stateType;
     }
-    public String explain(){
+    public String explain(){ // used for debugging
             StringBuilder out = new StringBuilder();
 
             if(isStart){

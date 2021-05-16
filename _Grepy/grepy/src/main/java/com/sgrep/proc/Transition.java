@@ -1,6 +1,6 @@
 package com.sgrep.proc;
 
-public class Transition {
+public class Transition { // used to hold and maintain transitions
     public State getfState() {
         return fState;
     }
@@ -37,7 +37,7 @@ public class Transition {
         this.c = c;
         //System.out.println("Transition from " + this.fState.getId() + " to "+ this.tState.getId()+ " my means of " + this.c);
     }
-    public  void  explain(){
+    public  void  explain(){ // used mainly for debugging
         System.out.println("Transition from " + this.fState.explain() + " to "+ this.tState.explain() + " my means of " + this.c);
     }
 }

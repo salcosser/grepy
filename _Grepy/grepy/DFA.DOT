@@ -5,5 +5,10 @@ node [shape = doublecircle]; q_1;
 node [shape = circle];
 init -> q_0 [style=solid]
 q_0 -> q_1 [ label= "a"];
+q_0 -> q_1 [ label= "b"];
+q_1 -> q_2 [ label= "b"];
 q_1 -> q_2 [ label= "a"];
+q_1 -> q_2 [ label= "b"];
+q_2 -> q_2 [ label= "a"];
+q_2 -> q_2 [ label= "b"];
 }

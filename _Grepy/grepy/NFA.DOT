@@ -1,8 +1,13 @@
 digraph NFA {
 rankdir=q
 size="8,5"
-node [shape = doublecircle]; q_1;
+node [shape = doublecircle]; q_5;
 node [shape = circle];
 init -> q_0 [style=solid]
-q_0 -> q_1 [ label= "a"];
+q_0 -> q_1 [ label= "~"];
+q_0 -> q_3 [ label= "~"];
+q_1 -> q_2 [ label= "a"];
+q_2 -> q_5 [ label= "~"];
+q_3 -> q_4 [ label= "b"];
+q_4 -> q_5 [ label= "~"];
 }
