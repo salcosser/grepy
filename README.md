@@ -1,6 +1,9 @@
 # grepy
 a Grep like utility that utilizes NFAs and DFAs.
 This utility takes in a regex, and parses strings against the regex using a DFA which it creates on the fly. It also creates an NFA. (NOTE: NFAs use <code>~</code> to represent epsilon)
+
+<hr>
+
 ## Instructions
 ### Setup
 1. Clone or download the main branch of the grepy repository.
@@ -22,6 +25,8 @@ This utility takes in a regex, and parses strings against the regex using a DFA 
 #### <code>java -jar grepy.jar DFAFILE.DOT NFAFILE.DOT regex.txt</code>
 #### Or
 #### <code> java -jar grepy.jar regex.txt</code>
+<hr>
 
 12. Once you run the command, the program will generate the state machines, as well as attempting to parse any strings that were in the regex file.
 13. you can choose to continue to try other strings by simply inputting them as specified by the interface, or typing <code>quit()</code> to end the program.
+14. To view the state machines, the easiest way to create them would be to copy the contents of each file, and paste them into <a href="https://edotor.net/">this site</a>. 
