@@ -1,4 +1,4 @@
-^(ab)*+(cd)$
-cd
-ababcd
-d
+^a$
+a
+b
+aa
