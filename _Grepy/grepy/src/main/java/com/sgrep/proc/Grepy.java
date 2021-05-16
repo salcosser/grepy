@@ -28,6 +28,12 @@ public class Grepy{
     HashMap<String, ArrayList<Transition>> dPartsMap = new HashMap<String, ArrayList<Transition>>();
     ArrayList<ArrayList<Transition>> dStateSet = new ArrayList<ArrayList<Transition>>();
     ArrayList<ArrayList<Transition>> nStateSet = new ArrayList<ArrayList<Transition>>();
+    ArrayList<Transition> holdingBayD = new ArrayList<Transition>();
+    ArrayList<Transition> holdingBayN = new ArrayList<Transition>();
+    int endSD = 0;
+    int startSD =0;
+    int endSN = 0;
+    int startSN =0;
     public Grepy(String nFile,String dFile){
         this.NSTrans = new ArrayList<Transition>();
         this.DSTrans = new ArrayList<Transition>();
@@ -270,6 +276,10 @@ public class Grepy{
             joinDfa(dPartsMap, newStr, dStates, parts, err);
 
             dStates.add(err);
+            dSegments.add(new ArrayList<Transition>());
+            for(char c : this.alphabet){
+                dSegments.get(dSegments.size()-1).add(new Transition(err, err, c));
+            }
             for(int i= 0;i<dStates.size();i++){
                 dStates.get(i).setId(i);
             }
@@ -331,17 +341,22 @@ public class Grepy{
         FileWriter writer = new FileWriter(fLoc);
         BufferedWriter buffer = new BufferedWriter(writer);
 
-        int endS = 0;
-        int startS =0;
+
         ArrayList<String> lines = new ArrayList<String>();
+        for(State s : nStates){
+            if(s.getType() == State.Type.ACCEPT){
+                endSN = s.getId();
+            }else if(s.isStart()){
+                startSN = s.getId();
+            }
+        }
+
+
+
         for(int i = 0;i<nStateSet.size();i++) {
 
             for(Transition t : nStateSet.get(i)) {
-                if(t.getfState().isStart()) {
-                    startS = t.getfState().getId();
-                }else if(t.gettState().getType() == State.Type.ACCEPT) {
-                    endS = t.gettState().getId();
-                }
+
                 String out = "q_"+t.getfState().getId() + " -> " + "q_"+t.gettState().getId() + " [ label= \"" + t.getC() + "\"];\n";
                 lines.add(out);
             }
@@ -350,7 +365,7 @@ public class Grepy{
         buffer.write("rankdir=q\n");
         buffer.write("size=\"8,5\"\n");
 
-        String accept = "node [shape = doublecircle]; q_" + endS + ";\n";
+        String accept = "node [shape = doublecircle]; q_" + endSN + ";\n";
         buffer.write(accept);
         buffer.write("node [shape = circle];\n");
         buffer.write("init -> q_0 [style=solid]\n");
@@ -382,17 +397,23 @@ public class Grepy{
         FileWriter writer = new FileWriter(fLoc);
         BufferedWriter buffer = new BufferedWriter(writer);
 
-        int endS = 0;
-        int startS =0;
+
         ArrayList<String> lines = new ArrayList<String>();
+
+        for(State s : dStates){
+            if(s.getType() == State.Type.ACCEPT){
+                endSD = s.getId();
+            }else if(s.isStart()){
+                startSD = s.getId();
+            }
+        }
+
+
+
         for(int i = 0;i<dStateSet.size();i++) {
 
             for(Transition t : dStateSet.get(i)) {
-                if(t.getfState().isStart()) {
-                    startS = t.getfState().getId();
-                }else if(t.gettState().getType() == State.Type.ACCEPT) {
-                    endS = t.gettState().getId();
-                }
+
                 String out = "q_"+t.getfState().getId() + " -> " + "q_"+t.gettState().getId() + " [ label= \"" + t.getC() + "\"];\n";
                 lines.add(out);
             }
@@ -401,7 +422,7 @@ public class Grepy{
         buffer.write("rankdir=q\n");
         buffer.write("size=\"8,5\"\n");
 
-        String accept = "node [shape = doublecircle]; q_" + endS + ";\n";
+        String accept = "node [shape = doublecircle]; q_" + endSD + ";\n";
         buffer.write(accept);
         buffer.write("node [shape = circle];\n");
         buffer.write("init -> q_0 [style=solid]\n");
@@ -420,8 +441,7 @@ public class Grepy{
         // make one big set
         //put them in place
 
-        ArrayList<Transition> holdingBayD = new ArrayList<Transition>();
-        ArrayList<Transition> holdingBayN = new ArrayList<Transition>();
+
         for(String p  :parts){
             holdingBayD.addAll(dPartsMap.get(p));
             holdingBayN.addAll(partsMap.get(p));
@@ -1451,6 +1471,22 @@ public class Grepy{
     }
 
 
+    public boolean passes(String s) {
+        int cState = startSD;
+        System.out.println("Attempting to get to" + endSD);
+        char[]  chars = s.toCharArray();
+        for(char c : chars){
+            for(Transition t: holdingBayD ){
+                if(t.getC() == c && t.getfState().getId() == cState){
+                   System.out.println("Going from state " + cState + " to " + t.gettState().getId());
+                    cState = t.gettState().getId();
 
+                    break;
+                }
+            }
+        }
+        //System.out.println(dStateSet.get(cState).explain());
+        return cState == endSD;
 
+    }
 }

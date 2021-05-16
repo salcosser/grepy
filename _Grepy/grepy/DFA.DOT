@@ -1,11 +1,9 @@
 digraph DFA {
 rankdir=q
 size="8,5"
-node [shape = doublecircle]; q_0;
+node [shape = doublecircle]; q_1;
 node [shape = circle];
 init -> q_0 [style=solid]
 q_0 -> q_1 [ label= "a"];
-q_0 -> q_2 [ label= "b"];
-q_1 -> q_0 [ label= "b"];
 q_1 -> q_2 [ label= "a"];
 }
