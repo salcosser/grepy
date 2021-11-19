@@ -1,7 +1,7 @@
 # grepy
-a Grep like utility that utilizes NFAs and DFAs.
+a Grep like utility that utilizes NFAs (Nondeterministic Finite Automatas) and DFAs (Deterministic Finite Automatas).
 This utility takes in a regex, and parses strings against the regex using a DFA which it creates on the fly. It also creates an NFA. (NOTE: NFAs use <code>~</code> to represent epsilon)
-
+These DFAs are then used to test if a set of given strings match the original regex.
 <hr>
 
 ## Instructions
